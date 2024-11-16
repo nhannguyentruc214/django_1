@@ -1,25 +1,39 @@
 from django.contrib import admin
-from .models import Author, Book, Borrower, LoanHistory
+from .models import Customer, Product, OrderHistory
+from django.db.models import Count
 
-@admin.register(Author)
-class AuthorAdmin(admin.ModelAdmin):
-    list_display = ('name', 'nationality', 'birth_date')
-    search_fields = ('name', 'nationality')
+class OrderInline(admin.StackedInline):
+    model = OrderHistory
+    extra = 1
+    show_change_link = True
 
-@admin.register(Book)
-class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'isbn', 'publisher', 'published_year')
-    search_fields = ('title', 'isbn')
-    list_filter = ('published_year',)
-    filter_horizontal = ('authors',)  # Makes it easier to manage ManyToMany relationships
+class ProductInline(admin.StackedInline):
+    model = Product
+    extra = 1
+    show_change_link = True
 
-@admin.register(Borrower)
-class BorrowerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'contact_info', 'address')
-    search_fields = ('name', 'contact_info')
+@admin.register(Customer)
+class CustomerAdmin(admin.ModelAdmin):
+    list_display = ('name','address')
+    inlines = [OrderInline]
 
-@admin.register(LoanHistory)
-class LoanHistoryAdmin(admin.ModelAdmin):
-    list_display = ('borrow_date', 'return_date', 'book', 'borrower')
-    search_fields = ('book__title', 'borrower__name')
-    list_filter = ('borrow_date', 'return_date')
+@admin.register(OrderHistory)
+class OrderHistoryAdmin(admin.ModelAdmin):
+
+    def product_count(self, obj):
+            return obj.products.count()
+    
+    def product_total_value(self, obj):
+            return sum(product.value for product in obj.products.all())
+     
+    list_display = ('order_date','status','product_count','product_total_value')
+    list_filter = ('order_date','status')
+    readonly_fields = ('product_count','product_total_value')
+    product_count.short_description = 'Number of Products'
+    product_total_value.short_description = 'Total value of Products'
+
+    inlines = [ProductInline]
+
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
+    list_display = ('name','value')
