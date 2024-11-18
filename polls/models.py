@@ -8,7 +8,7 @@ class Customer(models.Model):
         return self.name
     
 class Product(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     value = models.DecimalField(max_digits=10, decimal_places=2)  # Price of the product
     description = models.TextField()
     def __str__(self):
@@ -58,5 +58,5 @@ class OrderDetail(models.Model):
         return self.product.name or None  # Return 0 if no products are associated
 
     def __str__(self):
-        return f"Order detail"
+        return f"Order detail {self.pk}"
     
