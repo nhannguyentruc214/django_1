@@ -17,7 +17,13 @@ class OrderHistory(models.Model):
     order_date = models.DateField()
     status = models.CharField(max_length=255, choices=CHOICES)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='order_histories')
-
+    
+    @property
+    def total_value(self):
+        # Calculate the total value by summing the `value` field of related products
+        total = self.products.aggregate(total=models.Sum('value'))['total']
+        return total or 0  # Return 0 if no products are associated
+    
     def __str__(self):
         return f"Order {self.pk}: {self.customer.name} - {self.status}"
 
